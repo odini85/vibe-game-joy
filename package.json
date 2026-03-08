@@ -1,0 +1,14 @@
+{
+  "name": "nyangi-ui-moheom",
+  "displayName": "냥이의 모험",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "dev": "npx lite-server .index.html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
