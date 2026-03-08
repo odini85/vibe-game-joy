@@ -3,7 +3,7 @@ export class ItemManager {
     this.canvas = canvas;
     this.items = [];
     this.spawnTimer = 0;
-    this.spawnInterval = 65;
+    this.spawnInterval = 110;
     this.worldX = 0;
 
     this.itemTypes = [
@@ -14,6 +14,15 @@ export class ItemManager {
       { emoji: '💰', type: 'coin',  score: 30, w: 36, h: 36, color: '#FFD700', weight: 1 },
       { emoji: '🌟', type: 'coin',  score: 20, w: 38, h: 38, color: '#f7971e', weight: 2 },
       { emoji: '👟', type: 'shoe',  score: 0,  w: 36, h: 36, color: '#a8edea', weight: 1 },
+      { emoji: '👠', type: 'red_shoe', score: 0, w: 36, h: 36, color: '#ff6b6b', weight: 1 },
+      { emoji: '🛡️', type: 'blue_shield', score: 0, w: 38, h: 38, color: '#6ec6ff', weight: 1 },
+    ];
+
+    this.weaponTypes = [
+      { emoji: '🔥', type: 'weapon', weaponType: 'fire',     score: 0, w: 38, h: 38, color: '#ff9a3c' },
+      { emoji: '💧', type: 'weapon', weaponType: 'water',    score: 0, w: 38, h: 38, color: '#6ec6ff' },
+      { emoji: '⚡', type: 'weapon', weaponType: 'electric', score: 0, w: 38, h: 38, color: '#ffe066' },
+      { emoji: '🚀', type: 'weapon', weaponType: 'missile',  score: 0, w: 38, h: 38, color: '#f8f9fa' },
     ];
 
     // Build weighted array for random selection
@@ -77,6 +86,19 @@ export class ItemManager {
     });
   }
 
+  dropWeaponAt(screenX, y) {
+    const type = this.weaponTypes[Math.floor(Math.random() * this.weaponTypes.length)];
+    this.items.push({
+      ...type,
+      worldX: this.worldX + screenX,
+      screenX,
+      y: Math.max(60, y),
+      floatOffset: 0,
+      phase: Math.random() * Math.PI * 2,
+      collected: false,
+    });
+  }
+
   collect(playerBounds) {
     const collected = [];
 
@@ -96,7 +118,14 @@ export class ItemManager {
         playerBounds.y + playerBounds.h > ib.y
       ) {
         item.collected = true;
-        collected.push({ x: item.screenX, y: item.y, emoji: item.emoji, score: item.score, type: item.type });
+        collected.push({
+          x: item.screenX,
+          y: item.y,
+          emoji: item.emoji,
+          score: item.score,
+          type: item.type,
+          weaponType: item.weaponType || null,
+        });
       }
     }
 

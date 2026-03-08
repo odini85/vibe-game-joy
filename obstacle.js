@@ -3,17 +3,15 @@ export class ObstacleManager {
     this.canvas = canvas;
     this.obstacles = [];
     this.spawnTimer = 0;
-    this.spawnInterval = 80;
+    this.spawnInterval = 110;
     this.pitTimer = 0;
-    this.pitInterval = 600; // 낭떠러지는 10초마다 가끔 등장
+    this.pitInterval = 760; // 낭떠러지 빈도 감소
     this.worldX = 0;
 
     this.obstacleTypes = [
       { emoji: '🪨', type: 'rock',      w: 44, h: 40, ground: true },
       { emoji: '🌵', type: 'cactus',    w: 36, h: 56, ground: true },
       { emoji: '🪵', type: 'log',       w: 50, h: 32, ground: true },
-      { emoji: '⚡', type: 'lightning', w: 40, h: 40, ground: false, floatY: -80 },
-      { emoji: '🔥', type: 'fire',      w: 40, h: 44, ground: true },
       { emoji: '🍄', type: 'mushroom',  w: 44, h: 44, ground: true },
       { emoji: '🍄', type: 'mushroom',  w: 44, h: 44, ground: true }, // double weight
     ];
@@ -24,7 +22,7 @@ export class ObstacleManager {
   _preSpawn() {
     const groundY = this.canvas.height - 120;
     // 시작부터 화면 전반에 장애물 배치
-    const positions = [320, 520, 720, 880];
+    const positions = [460, 860];
     for (const sx of positions) {
       const type = this.obstacleTypes[Math.floor(Math.random() * this.obstacleTypes.length)];
       const y = type.ground ? groundY - type.h : groundY + (type.floatY || -80);
@@ -32,20 +30,27 @@ export class ObstacleManager {
     }
   }
 
-  update(scrollSpeed, groundY) {
+  update(scrollSpeed, groundY, stageLevel = 1, reducedMode = false) {
     this.worldX += scrollSpeed;
     this.spawnTimer++;
     this.pitTimer++;
 
-    if (this.spawnTimer >= this.spawnInterval) {
+    const level = Math.max(1, Math.min(stageLevel, 7));
+    const spawnScale = 1 / (1 + (level - 1) * 0.24);
+    const pitScale = 1 / (1 + (level - 1) * 0.18);
+    const currentSpawnInterval = this.spawnInterval * spawnScale * (reducedMode ? 1.15 : 1);
+    const currentPitInterval = this.pitInterval * pitScale * (reducedMode ? 1.2 : 1);
+
+    if (this.spawnTimer >= currentSpawnInterval) {
       this.spawnTimer = 0;
-      this._spawn(groundY);
-      if (this.spawnInterval > 70) this.spawnInterval -= 0.3;
+      if (!reducedMode || Math.random() > 0.2) this._spawn(groundY, level);
+      const minInterval = Math.max(55, 92 - (level - 1) * 5);
+      if (this.spawnInterval > minInterval) this.spawnInterval -= 0.3;
     }
 
-    if (this.pitTimer >= this.pitInterval) {
+    if (this.pitTimer >= currentPitInterval) {
       this.pitTimer = 0;
-      this._spawnPit(groundY);
+      if (!reducedMode || Math.random() > 0.25) this._spawnPit(groundY, level, reducedMode);
     }
 
     for (const obs of this.obstacles) {
@@ -55,11 +60,12 @@ export class ObstacleManager {
     this.obstacles = this.obstacles.filter(o => o.screenX > -200 && o.screenX < this.canvas.width + 200);
   }
 
-  _spawn(groundY) {
+  _spawn(groundY, stageLevel = 1) {
     const type = this.obstacleTypes[Math.floor(Math.random() * this.obstacleTypes.length)];
+    const offsetByLevel = Math.max(0, stageLevel - 1) * 5;
     const y = type.ground
       ? groundY - type.h
-      : groundY + (type.floatY || -80);
+      : groundY + (type.floatY || -80) - offsetByLevel;
 
     this.obstacles.push({
       ...type,
@@ -69,8 +75,12 @@ export class ObstacleManager {
     });
   }
 
-  _spawnPit(groundY) {
-    const w = 110 + Math.random() * 60;
+  _spawnPit(groundY, stageLevel = 1, reducedMode = false) {
+    const level = Math.max(1, Math.min(stageLevel, 7));
+    const minW = 95 + (level - 1) * 6;
+    const randW = 40 + (level - 1) * 6;
+    const reducedFactor = reducedMode ? 0.92 : 1;
+    const w = (minW + Math.random() * randW) * reducedFactor;
     this.obstacles.push({
       type: 'pit',
       worldX: this.worldX + this.canvas.width + 80,
@@ -84,7 +94,7 @@ export class ObstacleManager {
   reset() {
     this.obstacles = [];
     this.spawnTimer = 0;
-    this.spawnInterval = 80;
+    this.spawnInterval = 110;
     this.pitTimer = 0;
     this.worldX = 0;
   }

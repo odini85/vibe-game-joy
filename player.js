@@ -1,3 +1,5 @@
+import { BALANCE } from './balance.js';
+
 export class Player {
   constructor(canvas) {
     this.canvas = canvas;
@@ -9,6 +11,8 @@ export class Player {
     this.gravity = 0.6;
     this.jumpForce = -14;
     this.isGrounded = false;
+    this.maxJumps = 1;
+    this.jumpCount = 0;
     this.direction = 1;
     this.moving = false;
 
@@ -27,6 +31,8 @@ export class Player {
 
     // Slow mode (shoe item)
     this.slowModeTimer = 0;
+    this.springModeTimer = 0;
+    this.shieldTimer = 0;
 
     // Images
     this.imgRight = new Image();
@@ -36,9 +42,10 @@ export class Player {
   }
 
   jump() {
-    if (this.isGrounded) {
+    if (this.jumpCount < this.maxJumps) {
       this.vy = this.jumpForce;
       this.isGrounded = false;
+      this.jumpCount++;
     }
   }
 
@@ -50,6 +57,13 @@ export class Player {
     if (keys['ArrowLeft']) { this.direction = -1; this.moving = true; }
 
     if (this.slowModeTimer > 0) this.slowModeTimer--;
+    if (this.shieldTimer > 0) this.shieldTimer--;
+    if (this.springModeTimer > 0) {
+      this.springModeTimer--;
+      this.maxJumps = 2;
+    } else {
+      this.maxJumps = 1;
+    }
 
     this.vy += this.gravity;
     this.y += this.vy;
@@ -61,6 +75,7 @@ export class Player {
       this.y = groundY - this.height;
       this.vy = 0;
       this.isGrounded = true;
+      this.jumpCount = 0;
     } else {
       this.isGrounded = false;
       if (inPit && this.y > this.canvas.height + 50) {
@@ -84,8 +99,12 @@ export class Player {
   // amount: 2 = 목숨1개(~33%), 3 = 50%
   getHit(amount = 2) {
     if (this.invincible > 0) return false;
+    if (this.shieldTimer > 0) {
+      this.invincible = BALANCE.defense.shieldParryInvincibleFrames;
+      return false;
+    }
     this.hp = Math.max(0, this.hp - amount);
-    this.invincible = 90;
+    this.invincible = BALANCE.player.hitInvincibleFrames;
     if (this.hp <= 0) this.alive = false;
     return true;
   }
@@ -99,12 +118,22 @@ export class Player {
     this.slowModeTimer = duration;
   }
 
+  activateSpringMode(duration = 300) {
+    this.springModeTimer = duration;
+    this.maxJumps = 2;
+  }
+
+  activateShield(duration = BALANCE.defense.shieldDurationFrames) {
+    this.shieldTimer = Math.max(this.shieldTimer, duration);
+  }
+
   respawn(groundY) {
     this.y = groundY - this.height;
     this.vy = 0;
     this.isGrounded = true;
+    this.jumpCount = 0;
     this.fellInPit = false;
-    if (this.invincible <= 0) this.invincible = 120;
+    if (this.invincible <= 0) this.invincible = BALANCE.player.respawnInvincibleFrames;
   }
 
   getBounds() {
@@ -133,6 +162,10 @@ export class Player {
     if (this.slowModeTimer > 0) {
       ctx.shadowColor = '#74ebd5';
       ctx.shadowBlur = 22;
+    }
+    if (this.shieldTimer > 0) {
+      ctx.shadowColor = '#6ec6ff';
+      ctx.shadowBlur = 18;
     }
 
     if (tilt !== 0) {
