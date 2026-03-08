@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐱 냥이의 대모험</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: radial-gradient(ellipse at 50% 30%, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Nunito', sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Stars in background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle, #fff 1px, transparent 1px),
+        radial-gradient(circle, #fff 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px);
+      background-size: 200px 200px, 130px 130px, 80px 80px;
+      background-position: 0 0, 40px 60px, 80px 20px;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+
+    .game-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .game-title {
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(252, 92, 125, 0.8), 0 2px 4px rgba(0,0,0,0.5);
+      letter-spacing: 2px;
+    }
+
+    .canvas-container {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 3px rgba(255,255,255,0.15),
+        0 0 40px rgba(252, 92, 125, 0.4),
+        0 20px 60px rgba(0,0,0,0.6);
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 900px;
+      height: 480px;
+      image-rendering: crisp-edges;
+    }
+
+    .controls-hint {
+      display: flex;
+      gap: 20px;
+      color: rgba(255,255,255,0.5);
+      font-size: 13px;
+    }
+
+    .key-badge {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 4px 10px;
+    }
+
+    /* Mobile touch controls */
+    .mobile-controls {
+      display: none;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .touch-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      border: 2px solid rgba(255,255,255,0.25);
+      font-size: 26px;
+      cursor: pointer;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .touch-btn:active {
+      background: rgba(255,255,255,0.35);
+    }
+
+    @media (max-width: 920px) {
+      #gameCanvas {
+        width: 100vw;
+        height: auto;
+      }
+      .game-title { font-size: 20px; }
+      .controls-hint { display: none; }
+      .mobile-controls { display: flex; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-wrapper">
+    <div class="game-title">
+      <img src="cat_left.png" alt="" style="height:48px; vertical-align:middle; margin-right:8px;">
+      냥이의 대모험
+      <img src="cat_right.png" alt="" style="height:48px; vertical-align:middle; margin-left:8px;">
+    </div>
+
+    <div class="canvas-container">
+      <canvas id="gameCanvas" width="900" height="480"></canvas>
+    </div>
+
+    <div class="controls-hint">
+      <span class="key-badge">← → 이동</span>
+      <span class="key-badge">↑ 점프</span>
+      <span class="key-badge">Space 공격</span>
+      <span class="key-badge">Enter 시작/재시작</span>
+    </div>
+
+    <div class="mobile-controls" id="mobileControls">
+      <button class="touch-btn" id="btnLeft">◀</button>
+      <button class="touch-btn" id="btnJump">⬆</button>
+      <button class="touch-btn" id="btnRight">▶</button>
+      <button class="touch-btn" id="btnAttack">💥</button>
+    </div>
+  </div>
+
+  <script>
+    // Mobile button controls
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight = document.getElementById('btnRight');
+    const btnJump = document.getElementById('btnJump');
+
+    function pressKey(code) { window.dispatchEvent(new KeyboardEvent('keydown', { code })); }
+    function releaseKey(code) { window.dispatchEvent(new KeyboardEvent('keyup', { code })); }
+
+    const btnAttack = document.getElementById('btnAttack');
+
+    btnLeft.addEventListener('touchstart', e => { e.preventDefault(); pressKey('ArrowLeft'); }, { passive: false });
+    btnLeft.addEventListener('touchend', () => releaseKey('ArrowLeft'));
+    btnRight.addEventListener('touchstart', e => { e.preventDefault(); pressKey('ArrowRight'); }, { passive: false });
+    btnRight.addEventListener('touchend', () => releaseKey('ArrowRight'));
+    btnJump.addEventListener('touchstart', e => { e.preventDefault(); pressKey('ArrowUp'); }, { passive: false });
+    btnJump.addEventListener('touchend', () => releaseKey('ArrowUp'));
+    btnAttack.addEventListener('touchstart', e => { e.preventDefault(); pressKey('Space'); }, { passive: false });
+    btnAttack.addEventListener('touchend', () => releaseKey('Space'));
+  </script>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
